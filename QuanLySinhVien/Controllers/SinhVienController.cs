@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using QuanLySinhVien.Data;
 using QuanLySinhVien.Models;
-
+using QuanLySinhVien.DTOs;
 namespace QuanLySinhVien.Controllers
 {
     [Route("api/[controller]")]
@@ -23,9 +23,17 @@ namespace QuanLySinhVien.Controllers
         // ==============================
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SinhVien>>> GetAll()
+        public async Task<ActionResult<IEnumerable<SinhVienDto>>> GetAll()
         {
-            return await _context.SinhVien.ToListAsync();
+            return await _context.SinhVien
+                .Select(s => new SinhVienDto
+                {
+                    Id = s.Id,
+                    HoTen = s.HoTen,
+                    Email = s.Email,
+                    Tuoi = s.Tuoi
+                })
+                .ToListAsync();
         }
 
 
@@ -35,17 +43,18 @@ namespace QuanLySinhVien.Controllers
         // ==============================
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<SinhVien>> GetById(int id)
+        public async Task<ActionResult<SinhVienDto>> GetById(int id)
         {
-            var sinhVien =
-                await _context.SinhVien.FindAsync(id);
+            var sinhVien = await _context.SinhVien.FindAsync(id);
+            if (sinhVien == null) return NotFound();
 
-            if (sinhVien == null)
+            return new SinhVienDto
             {
-                return NotFound();
-            }
-
-            return sinhVien;
+                Id = sinhVien.Id,
+                HoTen = sinhVien.HoTen,
+                Email = sinhVien.Email,
+                Tuoi = sinhVien.Tuoi
+            };
         }
 
 

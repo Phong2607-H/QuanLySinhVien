@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using QuanLySinhVien.Models;
 
 
@@ -13,5 +13,6 @@ namespace QuanLySinhVien.Data
         }
 
         public DbSet<SinhVien> SinhVien { get; set; }
+        public DbSet<NguoiDung> NguoiDung { get; set; }
     }
 }

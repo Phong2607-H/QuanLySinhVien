@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using QuanLySinhVien.Data;
 using QuanLySinhVien.Models;
 using QuanLySinhVien.DTOs;
+using Microsoft.AspNetCore.Authorization;
 namespace QuanLySinhVien.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class SinhVienController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -64,17 +66,24 @@ namespace QuanLySinhVien.Controllers
         // ==============================
 
         [HttpPost]
-        public async Task<ActionResult<SinhVien>> Create(
-            SinhVien sinhVien)
+        public async Task<ActionResult<SinhVienDto>> Create(SinhVienDto sinhVienDto)
         {
-            _context.SinhVien.Add(sinhVien);
+            var sinhVien = new SinhVien
+            {
+                HoTen = sinhVienDto.HoTen,
+                Email = sinhVienDto.Email,
+                Tuoi = sinhVienDto.Tuoi
+            };
 
+            _context.SinhVien.Add(sinhVien);
             await _context.SaveChangesAsync();
+
+            sinhVienDto.Id = sinhVien.Id;
 
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = sinhVien.Id },
-                sinhVien
+                sinhVienDto
             );
         }
 
@@ -85,17 +94,24 @@ namespace QuanLySinhVien.Controllers
         // ==============================
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(
-            int id,
-            SinhVien sinhVien)
+        public async Task<IActionResult> Update(int id, SinhVienDto sinhVienDto)
         {
-            if (id != sinhVien.Id)
+            if (id != sinhVienDto.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(sinhVien).State =
-                EntityState.Modified;
+            var sinhVien = await _context.SinhVien.FindAsync(id);
+            if (sinhVien == null)
+            {
+                return NotFound();
+            }
+
+            sinhVien.HoTen = sinhVienDto.HoTen;
+            sinhVien.Email = sinhVienDto.Email;
+            sinhVien.Tuoi = sinhVienDto.Tuoi;
+
+            _context.Entry(sinhVien).State = EntityState.Modified;
 
             try
             {
@@ -107,7 +123,6 @@ namespace QuanLySinhVien.Controllers
                 {
                     return NotFound();
                 }
-
                 throw;
             }
 

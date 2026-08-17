@@ -65,7 +65,7 @@ namespace QuanLySinhVien.Controllers
             if (!isPasswordCorrect) return BadRequest("Tài khoản hoặc mật khẩu không chính xác!");
 
             var token = GenerateJwtToken(nguoiDung);
-            return Ok(new { Token = token, FullName = nguoiDung.FullName });
+            return Ok(new { Token = token, FullName = nguoiDung.FullName, Role = nguoiDung.Role });
         }
 
         private string GenerateJwtToken(NguoiDung nguoiDung)
@@ -77,6 +77,7 @@ namespace QuanLySinhVien.Controllers
             {
                 new Claim(ClaimTypes.NameIdentifier, nguoiDung.Id.ToString()),
                 new Claim(ClaimTypes.Name, nguoiDung.Username),
+                new Claim(ClaimTypes.Role, nguoiDung.Role), //Backend phan quyen API
                 new Claim("FullName", nguoiDung.FullName)
             };
 

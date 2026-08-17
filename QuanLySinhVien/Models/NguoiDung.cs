@@ -19,5 +19,8 @@ namespace QuanLySinhVien.Models
         public string FullName { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        [Required]
+        [MaxLength(20)]
+        public string Role { get; set; } = "GiangVien";
     }
 }

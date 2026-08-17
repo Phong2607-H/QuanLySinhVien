@@ -25,9 +25,53 @@ namespace QuanLySinhVien.Controllers
         // ==============================
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SinhVienDto>>> GetAll()
+        public async Task<ActionResult<PagedResult<SinhVienDto>>> GetAll([FromQuery] SinhVienQuery query)
         {
-            return await _context.SinhVien
+            // Sử dụng IQueryable để xây dựng câu truy vấn động dưới SQL Server
+            var queryable = _context.SinhVien.AsQueryable();
+
+            // 1. Xử lý Tìm kiếm (Filtering)
+            if (!string.IsNullOrWhiteSpace(query.Keyword))
+            {
+                var keyword = query.Keyword.Trim().ToLower();
+                queryable = queryable.Where(s =>
+                    s.HoTen.ToLower().Contains(keyword) ||
+                    s.Email.ToLower().Contains(keyword)
+                );
+            }
+
+            // 2. Xử lý Sắp xếp (Sorting)
+            if (!string.IsNullOrWhiteSpace(query.SortBy))
+            {
+                if (query.SortBy.Equals("HoTen", StringComparison.OrdinalIgnoreCase))
+                {
+                    queryable = query.IsDescending
+                        ? queryable.OrderByDescending(s => s.HoTen)
+                        : queryable.OrderBy(s => s.HoTen);
+                }
+                else if (query.SortBy.Equals("Tuoi", StringComparison.OrdinalIgnoreCase))
+                {
+                    queryable = query.IsDescending
+                        ? queryable.OrderByDescending(s => s.Tuoi)
+                        : queryable.OrderBy(s => s.Tuoi);
+                }
+                else
+                {
+                    queryable = queryable.OrderBy(s => s.Id);
+                }
+            }
+            else
+            {
+                queryable = queryable.OrderBy(s => s.Id); // Mặc định xếp theo Id
+            }
+
+            // Lấy tổng số dòng khớp điều kiện trước khi phân trang
+            var totalCount = await queryable.CountAsync();
+
+            // 3. Xử lý Phân trang (Pagination)
+            var items = await queryable
+                .Skip((query.PageNumber - 1) * query.PageSize) // Bỏ qua các dòng trang trước
+                .Take(query.PageSize)                          // Lấy đúng số dòng quy định
                 .Select(s => new SinhVienDto
                 {
                     Id = s.Id,
@@ -36,6 +80,16 @@ namespace QuanLySinhVien.Controllers
                     Tuoi = s.Tuoi
                 })
                 .ToListAsync();
+
+            var result = new PagedResult<SinhVienDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageNumber = query.PageNumber,
+                PageSize = query.PageSize
+            };
+
+            return Ok(result);
         }
 
 

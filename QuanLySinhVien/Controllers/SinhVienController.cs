@@ -77,7 +77,8 @@ namespace QuanLySinhVien.Controllers
                     Id = s.Id,
                     HoTen = s.HoTen,
                     Email = s.Email,
-                    Tuoi = s.Tuoi
+                    Tuoi = s.Tuoi,
+                    AvatarUrl = s.AvatarUrl
                 })
                 .ToListAsync();
 
@@ -109,7 +110,8 @@ namespace QuanLySinhVien.Controllers
                 Id = sinhVien.Id,
                 HoTen = sinhVien.HoTen,
                 Email = sinhVien.Email,
-                Tuoi = sinhVien.Tuoi
+                Tuoi = sinhVien.Tuoi,
+                AvatarUrl = sinhVien.AvatarUrl
             };
         }
 
@@ -126,7 +128,8 @@ namespace QuanLySinhVien.Controllers
             {
                 HoTen = sinhVienDto.HoTen,
                 Email = sinhVienDto.Email,
-                Tuoi = sinhVienDto.Tuoi
+                Tuoi = sinhVienDto.Tuoi,
+                AvatarUrl = sinhVienDto.AvatarUrl
             };
 
             _context.SinhVien.Add(sinhVien);
@@ -212,6 +215,52 @@ namespace QuanLySinhVien.Controllers
         {
             return _context.SinhVien
                 .Any(s => s.Id == id);
+        }
+        [HttpPost("upload-avatar/{id}")]
+        public async Task<IActionResult> UploadAvatar(int id, IFormFile file)
+        {
+            var sinhVien = await _context.SinhVien.FindAsync(id);
+            if (sinhVien == null) return NotFound("Không tìm thấy sinh viên!");
+
+            if (file == null || file.Length == 0) return BadRequest("Vui lòng chọn một file ảnh!");
+
+            // 1. Kiểm tra định dạng đuôi file
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (!allowedExtensions.Contains(extension))
+            {
+                return BadRequest("Định dạng file không hợp lệ! Chỉ chấp nhận .jpg, .jpeg, .png");
+            }
+
+            // 2. Kiểm tra dung lượng file (tối đa 2MB)
+            if (file.Length > 2 * 1024 * 1024)
+            {
+                return BadRequest("Dung lượng file quá lớn! Tối đa là 2MB.");
+            }
+
+            // 3. Tạo thư mục lưu file: wwwroot/avatars
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            // Tạo tên file duy nhất tránh bị đè đè khi upload trùng tên
+            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            // Lưu file vật lý vào thư mục server
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // Cập nhật đường dẫn file vào CSDL
+            sinhVien.AvatarUrl = $"/avatars/{uniqueFileName}";
+            _context.Entry(sinhVien).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { AvatarUrl = sinhVien.AvatarUrl });
         }
     }
 }

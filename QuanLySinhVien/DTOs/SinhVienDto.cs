@@ -6,5 +6,6 @@
         public string HoTen { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public int Tuoi { get; set; }
+        public string? AvatarUrl { get; set; }
     }
 }

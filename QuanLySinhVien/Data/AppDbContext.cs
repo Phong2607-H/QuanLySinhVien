@@ -16,5 +16,13 @@ namespace QuanLySinhVien.Data
         public DbSet<SinhVien> SinhVien { get; set; }
         public DbSet<NguoiDung> NguoiDung { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            // Cấu hình Global Query Filter: Tự động bỏ qua các dòng có IsDeleted == true
+            modelBuilder.Entity<SinhVien>().HasQueryFilter(s => !s.IsDeleted);
+            modelBuilder.Entity<NguoiDung>().HasQueryFilter(u => !u.IsDeleted);
+        }
     }
 }

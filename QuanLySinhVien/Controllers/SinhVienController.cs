@@ -214,7 +214,10 @@ namespace QuanLySinhVien.Controllers
             {
                 return NotFound();
             }
-            _context.SinhVien.Remove(sinhVien);
+            _context.SinhVien.Remove(sinhVien); //Xoa cung
+            //sinhVien.IsDeleted = true; // Xoa mem
+            //_context.Entry(sinhVien).State = EntityState.Modified;
+
 
             await _context.SaveChangesAsync();
 

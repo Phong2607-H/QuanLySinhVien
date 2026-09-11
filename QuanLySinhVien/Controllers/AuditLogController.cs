@@ -8,7 +8,7 @@ namespace QuanLySinhVien.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")] // 👈 Bắt buộc: Chỉ tài khoản Admin mới gọi được API này
+    [Authorize(Roles = "Admin")] //  Bắt buộc: Chỉ tài khoản Admin mới gọi được API này
     public class AuditLogController : ControllerBase
     {
         private readonly AppDbContext _context;

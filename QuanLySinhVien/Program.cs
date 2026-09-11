@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using QuanLySinhVien.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using QuanLySinhVien.Middleware;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,12 +34,14 @@ builder.Services.AddAuthentication(options =>
 });
 
 
-// Kết nối SQL Server
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-    )
-);
+// Kết nối SQL Server và cấu hình Audit Interceptor
+builder.Services.AddScoped<AuditSaveChangesInterceptor>();
+builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    var auditInterceptor = serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>();
+    options.AddInterceptors(auditInterceptor);
+});
 
 
 // Cho phép Angular gọi API
@@ -56,7 +59,7 @@ builder.Services.AddCors(options =>
 
 
 var app = builder.Build();
-
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 

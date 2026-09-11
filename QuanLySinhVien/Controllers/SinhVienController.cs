@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLySinhVien.Data;
 using QuanLySinhVien.Models;
@@ -23,8 +23,9 @@ namespace QuanLySinhVien.Controllers
         // GET: api/SinhVien
         // XEM DANH SÁCH
         // ==============================
-
+        
         [HttpGet]
+
         public async Task<ActionResult<PagedResult<SinhVienDto>>> GetAll([FromQuery] SinhVienQuery query)
         {
             // Sử dụng IQueryable để xây dựng câu truy vấn động dưới SQL Server
@@ -124,6 +125,12 @@ namespace QuanLySinhVien.Controllers
         [HttpPost]
         public async Task<ActionResult<SinhVienDto>> Create(SinhVienDto sinhVienDto)
         {
+            var emailTonTai = await _context.SinhVien
+               .AnyAsync(s => s.Email.ToLower() == sinhVienDto.Email.ToLower());
+            if (emailTonTai)
+            {
+                return BadRequest(new { message = "Email này đã tồn tại trong hệ thống! Vui lòng dùng email khác." });
+            }
             var sinhVien = new SinhVien
             {
                 HoTen = sinhVienDto.HoTen,
@@ -163,7 +170,12 @@ namespace QuanLySinhVien.Controllers
             {
                 return NotFound();
             }
-
+            var emailDaDung = await _context.SinhVien
+               .AnyAsync(s => s.Email.ToLower() == sinhVienDto.Email.ToLower() && s.Id != id);
+            if (emailDaDung)
+            {
+                return BadRequest(new { message = "Email này đã được sử dụng bởi sinh viên khác!" });
+            }
             sinhVien.HoTen = sinhVienDto.HoTen;
             sinhVien.Email = sinhVienDto.Email;
             sinhVien.Tuoi = sinhVienDto.Tuoi;
@@ -255,12 +267,25 @@ namespace QuanLySinhVien.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            // Cập nhật đường dẫn file vào CSDL
+            // 1. Lưu lại đường dẫn ảnh cũ của sinh viên trước khi đổi
+            var oldAvatarUrl = sinhVien.AvatarUrl;
+
+            // 2. Cập nhật đường dẫn file ảnh mới vào CSDL
             sinhVien.AvatarUrl = $"/avatars/{uniqueFileName}";
             _context.Entry(sinhVien).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
+            // 3. Xử lý xóa file ảnh cũ vật lý trên ổ cứng server
+            if (!string.IsNullOrEmpty(oldAvatarUrl))
+            {
+                var oldAbsoluteFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", oldAvatarUrl.TrimStart('/'));
+                if (System.IO.File.Exists(oldAbsoluteFilePath))
+                {
+                    System.IO.File.Delete(oldAbsoluteFilePath);
+                }
+            }
+
             return Ok(new { AvatarUrl = sinhVien.AvatarUrl });
         }
     }
-}
+}   

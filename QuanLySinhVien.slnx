@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="QuanLySinhVien.Tests/QuanLySinhVien.Tests.csproj" />
   <Project Path="QuanLySinhVien/QuanLySinhVien.csproj" />
 </Solution>

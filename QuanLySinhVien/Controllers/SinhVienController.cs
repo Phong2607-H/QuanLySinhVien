@@ -28,6 +28,7 @@ namespace QuanLySinhVien.Controllers
 
         public async Task<ActionResult<PagedResult<SinhVienDto>>> GetAll([FromQuery] SinhVienQuery query)
         {
+            
             // Sử dụng IQueryable để xây dựng câu truy vấn động dưới SQL Server
             var queryable = _context.SinhVien.AsQueryable();
 
@@ -214,9 +215,9 @@ namespace QuanLySinhVien.Controllers
             {
                 return NotFound();
             }
-            _context.SinhVien.Remove(sinhVien); //Xoa cung
-            //sinhVien.IsDeleted = true; // Xoa mem
-            //_context.Entry(sinhVien).State = EntityState.Modified;
+            //_context.SinhVien.Remove(sinhVien); //Xoa cung
+            sinhVien.IsDeleted = true; // Xoa mem
+            _context.Entry(sinhVien).State = EntityState.Modified;
 
 
             await _context.SaveChangesAsync();
@@ -232,6 +233,7 @@ namespace QuanLySinhVien.Controllers
                 .Any(s => s.Id == id);
         }
         [HttpPost("upload-avatar/{id}")]
+        [Authorize(Roles = "Admin,GiangVien")]
         public async Task<IActionResult> UploadAvatar(int id, IFormFile file)
         {
             var sinhVien = await _context.SinhVien.FindAsync(id);

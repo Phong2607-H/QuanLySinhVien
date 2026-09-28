@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using QuanLySinhVien.DTOs;
@@ -48,12 +48,25 @@ namespace QuanLySinhVien.Middleware
                 Details = _env.IsDevelopment() ? exception.StackTrace?.ToString() : null
             };
 
-            // Nếu người dùng truy cập trái phép
-            if (exception is UnauthorizedAccessException)
+            // Phân loại mã lỗi HTTP dựa trên Kiểu dữ liệu của Exception (Exception Type Pattern Matching)
+            switch (exception)
             {
-                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized; // 401
-                response.StatusCode = 401;
-                response.Message = "Phiên đăng nhập đã hết hạn hoặc không hợp lệ!";
+                case UnauthorizedAccessException:
+                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized; // 401
+                    response.StatusCode = 401;
+                    response.Message = "Phiên đăng nhập đã hết hạn hoặc không hợp lệ!";
+                    break;
+
+                case ArgumentException or BadHttpRequestException:
+                    context.Response.StatusCode = (int)HttpStatusCode.BadRequest; // 400
+                    response.StatusCode = 400;
+                    response.Message = exception.Message;
+                    break;
+
+                default:
+                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError; // 500
+                    response.StatusCode = 500;
+                    break;
             }
 
             var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };

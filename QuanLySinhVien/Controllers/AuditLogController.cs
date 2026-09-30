@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLySinhVien.Data;
 using System.Threading.Tasks;
+using QuanLySinhVien.DTOs;
 
 namespace QuanLySinhVien.Controllers
 {
@@ -22,7 +23,18 @@ namespace QuanLySinhVien.Controllers
         public async Task<IActionResult> GetAll()
         {
             var logs = await _context.AuditLogs
+                .AsNoTracking()// Không theo dõi các thay đổi của các bản ghi này trong DbContext
                 .OrderByDescending(l => l.Timestamp) // Bản ghi mới nhất lên đầu
+                .Select(l => new AuditLogDto
+                {
+                    Id = l.Id,
+                    Username = l.Username,
+                    Action = l.Action,
+                    TableName = l.TableName,
+                    OldValues = l.OldValues,
+                    NewValues = l.NewValues,
+                    Timestamp = l.Timestamp
+                })// Chọn các trường cần thiết để trả về cho client
                 .ToListAsync();
             return Ok(logs);
         }

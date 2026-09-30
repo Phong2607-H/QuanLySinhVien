@@ -189,9 +189,13 @@ namespace QuanLySinhVien.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!await SinhVienExists(id)) return NotFound();
+                if (!await SinhVienExists(id))
+                {
+                    return NotFound();
+                }
+                throw;
             }
-
+           
             return NoContent();
         }
 

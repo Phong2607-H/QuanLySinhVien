@@ -189,11 +189,7 @@ namespace QuanLySinhVien.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!SinhVienExists(id))
-                {
-                    return NotFound();
-                }
-                throw;
+                if (!await SinhVienExists(id)) return NotFound();
             }
 
             return NoContent();
@@ -227,11 +223,11 @@ namespace QuanLySinhVien.Controllers
 
 
         // Kiểm tra tồn tại
-        private bool SinhVienExists(int id)
+        private async Task<bool> SinhVienExists(int id)
         {
-            return _context.SinhVien
-                .Any(s => s.Id == id);
+            return await _context.SinhVien.AnyAsync(s => s.Id == id);
         }
+        
         [HttpPost("upload-avatar/{id}")]
         [Authorize(Roles = "Admin,GiangVien")]
         public async Task<IActionResult> UploadAvatar(int id, IFormFile file)

@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLySinhVien.Data;
-using QuanLySinhVien.Models;
 using QuanLySinhVien.DTOs;
-using Microsoft.AspNetCore.Authorization;
+using QuanLySinhVien.Exceptions;
+using QuanLySinhVien.Models;
 namespace QuanLySinhVien.Controllers
 {
     [Route("api/[controller]")]
@@ -12,10 +13,12 @@ namespace QuanLySinhVien.Controllers
     public class SinhVienController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _env;// Để lấy đường dẫn tuyệt đối của thư mục wwwroot
 
-        public SinhVienController(AppDbContext context)
+        public SinhVienController(AppDbContext context, IWebHostEnvironment env )
         {
             _context = context;
+            _env = env;
         }
 
 
@@ -28,7 +31,9 @@ namespace QuanLySinhVien.Controllers
 
         public async Task<ActionResult<PagedResult<SinhVienDto>>> GetAll([FromQuery] SinhVienQuery query)
         {
-            
+            if (query.PageNumber < 1) query.PageNumber = 1;// Vì nếu PageNumber < 1 thì sẽ bị lỗi khi tính toán Skip, nên mặc định là 1
+            if (query.PageSize < 1 || query.PageSize > 50) query.PageSize = 5;// Vì nếu PageSize < 1 hoặc > 50 thì sẽ bị lỗi khi tính toán Take, nên mặc định là 5
+
             // Sử dụng IQueryable để xây dựng câu truy vấn động dưới SQL Server
             var queryable = _context.SinhVien.AsQueryable();
 
@@ -45,22 +50,18 @@ namespace QuanLySinhVien.Controllers
             // 2. Xử lý Sắp xếp (Sorting)
             if (!string.IsNullOrWhiteSpace(query.SortBy))
             {
-                if (query.SortBy.Equals("HoTen", StringComparison.OrdinalIgnoreCase))
+                var sortBy = query.SortBy?.Trim().ToLower();
+                queryable = (sortBy, query.IsDescending) switch
                 {
-                    queryable = query.IsDescending
-                        ? queryable.OrderByDescending(s => s.HoTen)
-                        : queryable.OrderBy(s => s.HoTen);
-                }
-                else if (query.SortBy.Equals("Tuoi", StringComparison.OrdinalIgnoreCase))
-                {
-                    queryable = query.IsDescending
-                        ? queryable.OrderByDescending(s => s.Tuoi)
-                        : queryable.OrderBy(s => s.Tuoi);
-                }
-                else
-                {
-                    queryable = queryable.OrderBy(s => s.Id);
-                }
+                    ("hoten", false) => queryable.OrderBy(s => s.HoTen),
+                    ("hoten", true) => queryable.OrderByDescending(s => s.HoTen),
+                    ("email", false) => queryable.OrderBy(s => s.Email),
+                    ("email", true) => queryable.OrderByDescending(s => s.Email),
+                    ("tuoi", false) => queryable.OrderBy(s => s.Tuoi),
+                    ("tuoi", true) => queryable.OrderByDescending(s => s.Tuoi),
+                    (_, true) => queryable.OrderByDescending(s => s.Id),
+                    _ => queryable.OrderBy(s => s.Id)
+                };
             }
             else
             {
@@ -105,7 +106,8 @@ namespace QuanLySinhVien.Controllers
         public async Task<ActionResult<SinhVienDto>> GetById(int id)
         {
             var sinhVien = await _context.SinhVien.FindAsync(id);
-            if (sinhVien == null) return NotFound();
+            if (sinhVien == null) throw new NotFoundException($"Không tìm thấy sinh viên có Id = {id}!"
+ );
 
             return new SinhVienDto
             {
@@ -124,13 +126,14 @@ namespace QuanLySinhVien.Controllers
         // ==============================
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]// Chỉ Admin mới được thêm sinh viên
         public async Task<ActionResult<SinhVienDto>> Create(SinhVienDto sinhVienDto)
         {
             var emailTonTai = await _context.SinhVien
                .AnyAsync(s => s.Email.ToLower() == sinhVienDto.Email.ToLower());
             if (emailTonTai)
             {
-                return BadRequest(new { message = "Email này đã tồn tại trong hệ thống! Vui lòng dùng email khác." });
+                throw new ConflictException("Email này đã tồn tại trong hệ thống! Vui lòng dùng email khác.");
             }
             var sinhVien = new SinhVien
             {
@@ -159,23 +162,24 @@ namespace QuanLySinhVien.Controllers
         // ==============================
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]// Chỉ Admin mới được sửa sinh viên
         public async Task<IActionResult> Update(int id, SinhVienDto sinhVienDto)
         {
             if (id != sinhVienDto.Id)
             {
-                return BadRequest();
+                throw new BadRequestException("Id trong URL không khớp với Id trong dữ liệu gửi lên!");
             }
 
             var sinhVien = await _context.SinhVien.FindAsync(id);
             if (sinhVien == null)
             {
-                return NotFound();
+                throw new NotFoundException($"Không tìm thấy sinh viên có Id = {id}!");
             }
             var emailDaDung = await _context.SinhVien
                .AnyAsync(s => s.Email.ToLower() == sinhVienDto.Email.ToLower() && s.Id != id);
             if (emailDaDung)
             {
-                return BadRequest(new { message = "Email này đã được sử dụng bởi sinh viên khác!" });
+                throw new ConflictException("Email này đã được sử dụng bởi sinh viên khác!");
             }
             sinhVien.HoTen = sinhVienDto.HoTen;
             sinhVien.Email = sinhVienDto.Email;
@@ -191,9 +195,9 @@ namespace QuanLySinhVien.Controllers
             {
                 if (!await SinhVienExists(id))
                 {
-                    return NotFound();
+                    throw new NotFoundException($"Không tìm thấy sinh viên có Id = {id}!");
                 }
-                throw;
+                throw;// Nếu có lỗi khác, ném ra để xử lý ở tầng trên
             }
            
             return NoContent();
@@ -206,6 +210,7 @@ namespace QuanLySinhVien.Controllers
         // ==============================
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")] // Chỉ Admin mới được xóa sinh viên
         public async Task<IActionResult> Delete(int id)
         {
             var sinhVien =
@@ -213,7 +218,7 @@ namespace QuanLySinhVien.Controllers
 
             if (sinhVien == null)
             {
-                return NotFound();
+                throw new NotFoundException($"Không tìm thấy sinh viên có Id = {id}!");
             }
             //_context.SinhVien.Remove(sinhVien); //Xoa cung
             sinhVien.IsDeleted = true; // Xoa mem
@@ -237,26 +242,27 @@ namespace QuanLySinhVien.Controllers
         public async Task<IActionResult> UploadAvatar(int id, IFormFile file)
         {
             var sinhVien = await _context.SinhVien.FindAsync(id);
-            if (sinhVien == null) return NotFound("Không tìm thấy sinh viên!");
+            if (sinhVien == null)
+                throw new NotFoundException($"Không tìm thấy sinh viên có Id = {id}!");
 
-            if (file == null || file.Length == 0) return BadRequest("Vui lòng chọn một file ảnh!");
+            if (file == null || file.Length == 0) throw new BadRequestException("Vui lòng chọn một file ảnh!");
 
             // 1. Kiểm tra định dạng đuôi file
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
             var extension = Path.GetExtension(file.FileName).ToLower();
             if (!allowedExtensions.Contains(extension))
             {
-                return BadRequest("Định dạng file không hợp lệ! Chỉ chấp nhận .jpg, .jpeg, .png");
+                throw new BadRequestException("Định dạng file không hợp lệ! Chỉ chấp nhận các định dạng: .jpg, .jpeg, .png");
             }
 
             // 2. Kiểm tra dung lượng file (tối đa 2MB)
             if (file.Length > 2 * 1024 * 1024)
             {
-                return BadRequest("Dung lượng file quá lớn! Tối đa là 2MB.");
+                throw new BadRequestException("Dung lượng file quá lớn! Vui lòng chọn file có dung lượng tối đa 2MB.");
             }
 
             // 3. Tạo thư mục lưu file: wwwroot/avatars
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars");
+            var uploadsFolder = Path.Combine(_env.WebRootPath, "avatars");
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
@@ -277,13 +283,22 @@ namespace QuanLySinhVien.Controllers
 
             // 2. Cập nhật đường dẫn file ảnh mới vào CSDL
             sinhVien.AvatarUrl = $"/avatars/{uniqueFileName}";
-            _context.Entry(sinhVien).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch
+            {
+                // Lưu DB thất bại → xóa file mới vừa ghi để không để lại rác
+                if (System.IO.File.Exists(filePath))
+                    System.IO.File.Delete(filePath);
+                throw; // ném tiếp cho ExceptionMiddleware trả JSON lỗi
+            }
 
             // 3. Xử lý xóa file ảnh cũ vật lý trên ổ cứng server
             if (!string.IsNullOrEmpty(oldAvatarUrl))
             {
-                var oldAbsoluteFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", oldAvatarUrl.TrimStart('/'));
+                var oldAbsoluteFilePath = Path.Combine(_env.WebRootPath, oldAvatarUrl.TrimStart('/'));
                 if (System.IO.File.Exists(oldAbsoluteFilePath))
                 {
                     System.IO.File.Delete(oldAbsoluteFilePath);

@@ -14,7 +14,7 @@ namespace QuanLySinhVien.Data
     public class AuditSaveChangesInterceptor : SaveChangesInterceptor
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-
+        private static readonly HashSet<string> SensitiveProperties = new() { "PasswordHash" };
         public AuditSaveChangesInterceptor(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
@@ -83,6 +83,7 @@ namespace QuanLySinhVien.Data
                 foreach (var property in entry.Properties)
                 {
                     string propertyName = property.Metadata.Name;
+                    if (SensitiveProperties.Contains(propertyName)) continue;
                     if (property.Metadata.IsPrimaryKey())
                     {
                         auditEntry.KeyValues[propertyName] = property.CurrentValue ?? "";
@@ -129,7 +130,6 @@ namespace QuanLySinhVien.Data
             public Dictionary<string, object> KeyValues { get; } = new();
             public Dictionary<string, object> OldValues { get; } = new();
             public Dictionary<string, object> NewValues { get; } = new();
-
             public AuditLog ToAudit()
             {
                 return new AuditLog

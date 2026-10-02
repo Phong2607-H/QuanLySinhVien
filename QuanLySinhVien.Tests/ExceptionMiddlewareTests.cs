@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
 using QuanLySinhVien.DTOs;
+using QuanLySinhVien.Exceptions;
 using QuanLySinhVien.Middleware;
 using System;
 using System.IO;
@@ -143,6 +144,27 @@ namespace QuanLySinhVien.Tests
 
             Assert.NotNull(result);
             // Ở Production, details phải là null để bảo mật thông tin hệ thống
+            Assert.Null(result.Details);
+        }
+        [Fact]
+        public async Task InvokeAsync_KhiNemNotFoundException_TraVe404VaDungMessage()
+        {
+            _mockEnv.Setup(m => m.EnvironmentName).Returns("Production");
+            RequestDelegate next = _ => throw new NotFoundException("Không tìm thấy sinh viên có Id = 99!");
+            var middleware = new ExceptionMiddleware(next, _mockLogger.Object, _mockEnv.Object);
+            var context = new DefaultHttpContext();
+            context.Response.Body = new MemoryStream();
+
+            await middleware.InvokeAsync(context);
+
+            Assert.Equal(404, context.Response.StatusCode);
+            context.Response.Body.Seek(0, SeekOrigin.Begin);
+            var body = await new StreamReader(context.Response.Body).ReadToEndAsync();
+            var result = JsonSerializer.Deserialize<ErrorResponse>(body,
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            Assert.NotNull(result);
+            Assert.Equal(404, result.StatusCode);
+            Assert.Equal("Không tìm thấy sinh viên có Id = 99!", result.Message);
             Assert.Null(result.Details);
         }
     }

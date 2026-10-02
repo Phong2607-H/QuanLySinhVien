@@ -7,6 +7,7 @@ using QuanLySinhVien.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using QuanLySinhVien.Exceptions;
 
 namespace QuanLySinhVien.Controllers
 {
@@ -29,11 +30,11 @@ namespace QuanLySinhVien.Controllers
             // Kiểm tra rỗng
             if (string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Password))
             {
-                return BadRequest("Tài khoản và mật khẩu không được để trống!");
+                throw new BadRequestException("Tài khoản và mật khẩu không được để trống!");
             }
             if (await _context.NguoiDung.AnyAsync(u => u.Username == dto.Username))
             {
-                return BadRequest("Tài khoản đã tồn tại!");
+                throw new ConflictException("Tài khoản đã tồn tại!");
             }
 
             var nguoiDung = new NguoiDung
@@ -55,14 +56,14 @@ namespace QuanLySinhVien.Controllers
             // Kiểm tra rỗng
             if (string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Password))
             {
-                return BadRequest("Tài khoản và mật khẩu không được để trống!");
+                throw new BadRequestException("Tài khoản và mật khẩu không được để trống!");
             }
 
             var nguoiDung = await _context.NguoiDung.FirstOrDefaultAsync(u => u.Username == dto.Username);
-            if (nguoiDung == null) return BadRequest("Tài khoản hoặc mật khẩu không chính xác!");
+            if (nguoiDung == null) throw new BadRequestException("Tài khoản hoặc mật khẩu không chính xác!");
 
             bool isPasswordCorrect = BCrypt.Net.BCrypt.Verify(dto.Password, nguoiDung.PasswordHash);
-            if (!isPasswordCorrect) return BadRequest("Tài khoản hoặc mật khẩu không chính xác!");
+            if (!isPasswordCorrect) throw new BadRequestException("Tài khoản hoặc mật khẩu không chính xác!");
 
             var token = GenerateJwtToken(nguoiDung);
             return Ok(new { Token = token, FullName = nguoiDung.FullName, Role = nguoiDung.Role });

@@ -1,0 +1,173 @@
+.container {
+  max-width: 1200px;
+  margin: 36px auto 60px auto;
+  padding: 0 24px;
+  font-family: inherit;
+}
+
+.top-nav {
+  margin-bottom: 24px;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  background: white;
+  color: var(--text-muted);
+  border: 1px solid var(--card-border);
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: 0 2px 6px rgba(45, 75, 55, 0.04);
+}
+
+.btn-back:hover {
+  background: var(--color-sage-soft);
+  color: var(--color-sage);
+  border-color: var(--color-sage-border);
+  transform: translateX(-2px);
+}
+
+h1 {
+  color: var(--text-main);
+  margin-bottom: 28px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  position: relative;
+  display: inline-block;
+}
+
+h1::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: var(--color-sage);
+  border-radius: var(--radius-pill);
+  margin-top: 8px;
+}
+
+.error-banner {
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger-text);
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  margin-bottom: 24px;
+  font-size: 14px;
+  border: 1px solid var(--color-danger-border);
+}
+
+/* Khung bảng bo tròn êm dịu */
+.table-wrapper {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th {
+  background-color: #f1f6f2;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 15px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--card-border);
+}
+
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #edf2ee;
+  color: var(--text-main);
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+  background-color: #f7faf8;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.user-pill {
+  display: inline-block;
+  background: #f0f4f1;
+  color: var(--text-main);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 12px;
+  border: 1px solid #dbe5de;
+}
+
+/* Các nhãn hành động dạng pastel tự nhiên */
+.label-them {
+  background-color: #eaf2ed;
+  color: #365945;
+  border: 1px solid #cfded3;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 11px;
+  display: inline-block;
+}
+
+.label-sua {
+  background-color: #fbf4e6;
+  color: #9e6b20;
+  border: 1px solid #f0debe;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 11px;
+  display: inline-block;
+}
+
+.label-xoa {
+  background-color: #faebea;
+  color: #b5473f;
+  border: 1px solid #f2cecc;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 11px;
+  display: inline-block;
+}
+
+/* Ô hiển thị JSON */
+.json-cell {
+  max-width: 280px;
+}
+
+.json-content {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 11px;
+  color: #55695c;
+  background: #f6faf7;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #e2ebe4;
+  word-break: break-all;
+  max-height: 80px;
+  overflow-y: auto;
+}

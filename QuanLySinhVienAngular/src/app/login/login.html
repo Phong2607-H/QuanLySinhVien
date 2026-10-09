@@ -1,0 +1,50 @@
+<div class="auth-container">
+  <div class="auth-box">
+    <h2>ĐĂNG NHẬP HỆ THỐNG</h2>
+
+    <div *ngIf="errorMessage" class="error-banner">
+      ⚠️ {{ errorMessage }}
+    </div>
+
+    <form (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="username">Tên đăng nhập</label>
+        <input type="text"
+               id="username"
+               name="username"
+               [(ngModel)]="credentials.username"
+               required
+               #usernameVar="ngModel"
+               placeholder="Nhập tên đăng nhập">
+        <div *ngIf="usernameVar.invalid && (usernameVar.dirty || usernameVar.touched)" class="validation-error">
+          ⚠️ Tên đăng nhập không được để trống!
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Mật khẩu</label>
+        <input type="password"
+               id="password"
+               name="password"
+               [(ngModel)]="credentials.password"
+               required
+               minlength="6"
+               #passwordVar="ngModel"
+               placeholder="Nhập mật khẩu">
+        <div *ngIf="passwordVar.invalid && (passwordVar.dirty || passwordVar.touched)" class="validation-error">
+          <span *ngIf="passwordVar.errors?.['required']">⚠️ Mật khẩu không được để trống!</span>
+          <span *ngIf="passwordVar.errors?.['minlength']">⚠️ Mật khẩu phải có ít nhất 6 ký tự!</span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" [disabled]="usernameVar.invalid || passwordVar.invalid">
+        Đăng nhập
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <span>Chưa có tài khoản? </span>
+      <a (click)="goToRegister()">Đăng ký ngay</a>
+    </div>
+  </div>
+</div>

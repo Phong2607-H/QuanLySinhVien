@@ -1,0 +1,61 @@
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toast-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px -5px rgba(35, 60, 45, 0.12), 0 4px 10px -2px rgba(35, 60, 45, 0.05);
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 280px;
+  max-width: 420px;
+  animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+  backdrop-filter: blur(12px);
+  border: 1px solid transparent;
+}
+
+.toast-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Các biến thể màu dịu mắt */
+.success {
+  background-color: rgba(235, 246, 238, 0.95);
+  color: #275238;
+  border-color: #c9e2cf;
+}
+
+.error {
+  background-color: rgba(253, 241, 240, 0.95);
+  color: #a33830;
+  border-color: #f2cecc;
+}
+
+.warning {
+  background-color: rgba(254, 248, 236, 0.95);
+  color: #8c5a14;
+  border-color: #f0debe;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(110%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

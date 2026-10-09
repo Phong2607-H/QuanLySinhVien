@@ -6,3 +6,6 @@ dist/
 .angular/
 *.user
 *.suo
+# Ket qua test / coverage sinh tu dong
+TestResults/
+CoverageReport/

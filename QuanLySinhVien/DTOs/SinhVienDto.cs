@@ -17,5 +17,6 @@ namespace QuanLySinhVien.DTOs
         public int Tuoi { get; set; }
 
         public string? AvatarUrl { get; set; }
+        public byte[]? RowVersion { get; set; }
     }
 }

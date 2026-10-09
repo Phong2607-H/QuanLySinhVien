@@ -14,7 +14,7 @@ namespace QuanLySinhVien.Data
     public class AuditSaveChangesInterceptor : SaveChangesInterceptor
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private static readonly HashSet<string> SensitiveProperties = new() { "PasswordHash" };
+        private static readonly HashSet<string> SensitiveProperties = new() { "PasswordHash", "RowVersion" };
         public AuditSaveChangesInterceptor(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;

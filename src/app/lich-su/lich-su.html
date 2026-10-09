@@ -1,0 +1,54 @@
+<div class="container">
+  <div class="top-nav">
+    <a routerLink="/sinh-vien" class="btn-back">
+      ← Quay lại Quản lý Sinh viên
+    </a>
+  </div>
+
+  <h1>NHẬT KÝ HOẠT ĐỘNG HỆ THỐNG</h1>
+  <p *ngIf="errorMessage" class="error-banner">⚠️ {{ errorMessage }}</p>
+
+  <div class="table-wrapper" *ngIf="!errorMessage">
+    <table>
+      <thead>
+        <tr>
+          <th>Thời gian</th>
+          <th>Tài khoản</th>
+          <th>Hành động</th>
+          <th>Bảng tác động</th>
+          <th>Dữ liệu cũ (Trước khi sửa)</th>
+          <th>Dữ liệu mới (Sau khi sửa)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of logs">
+          <td style="white-space: nowrap; color: var(--text-muted);">
+            {{ log.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}
+          </td>
+          <td>
+            <span class="user-pill">{{ log.username }}</span>
+          </td>
+          <td>
+            <span [ngClass]="{
+              'label-them': log.action === 'Thêm',
+              'label-sua': log.action === 'Sửa',
+              'label-xoa': log.action === 'Xóa'
+            }">{{ log.action }}</span>
+          </td>
+          <td style="font-weight: 500;">{{ log.tableName }}</td>
+          <td class="json-cell">
+            <div class="json-content">{{ log.oldValues || '—' }}</div>
+          </td>
+          <td class="json-cell">
+            <div class="json-content">{{ log.newValues || '—' }}</div>
+          </td>
+        </tr>
+        <tr *ngIf="logs.length === 0">
+          <td colspan="6" style="text-align: center; padding: 36px; color: var(--text-light);">
+            Chưa có ghi nhận hoạt động nào trong hệ thống.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

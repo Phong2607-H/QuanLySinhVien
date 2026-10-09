@@ -22,6 +22,5 @@ namespace QuanLySinhVien.Models
         [Required]
         [MaxLength(20)]
         public string Role { get; set; } = "GiangVien";
-        public bool IsDeleted { get; set; } = false;
     }
 }

@@ -32,10 +32,8 @@ namespace QuanLySinhVien.Controllers
             {
                 throw new BadRequestException("Tài khoản và mật khẩu không được để trống!");
             }
-            if (await _context.NguoiDung.AnyAsync(u => u.Username == dto.Username))
-            {
+            if (await _context.NguoiDung.IgnoreQueryFilters().AnyAsync(u => u.Username == dto.Username))
                 throw new ConflictException("Tài khoản đã tồn tại!");
-            }
 
             var nguoiDung = new NguoiDung
             {

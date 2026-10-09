@@ -56,7 +56,9 @@ builder.Services.AddAuthentication(options =>
 
 // Kết nối SQL Server và cấu hình Audit Interceptor
 builder.Services.AddScoped<AuditSaveChangesInterceptor>();
+builder.Services.AddScoped<QuanLySinhVien.Services.SinhVienService>();
 builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
     var auditInterceptor = serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>();

@@ -20,9 +20,8 @@ namespace QuanLySinhVien.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            // Cấu hình Global Query Filter: Tự động bỏ qua các dòng có IsDeleted == true
+            // Global Query Filter: chỉ áp dụng xóa mềm cho Sinh viên (tài khoản không xóa mềm)
             modelBuilder.Entity<SinhVien>().HasQueryFilter(s => !s.IsDeleted);
-            modelBuilder.Entity<NguoiDung>().HasQueryFilter(u => !u.IsDeleted);
         }
     }
 }

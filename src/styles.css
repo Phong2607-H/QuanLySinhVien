@@ -1,1 +1,68 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --bg-gradient: linear-gradient(145deg, #f3f7f4 0%, #e9f0eb 50%, #f6faf7 100%);
+  --card-bg: #ffffff;
+  --card-border: #e1eae3;
+  --card-shadow: 0 10px 30px -5px rgba(45, 75, 55, 0.06), 0 4px 12px -2px rgba(45, 75, 55, 0.03);
+  --card-shadow-hover: 0 14px 35px -5px rgba(45, 75, 55, 0.1), 0 6px 16px -2px rgba(45, 75, 55, 0.04);
+  
+  /* Bảng màu yên bình (Serene Nature & Earth tones) */
+  --color-sage: #456f57;
+  --color-sage-hover: #365945;
+  --color-sage-soft: #eaf2ed;
+  --color-sage-border: #cfded3;
+  
+  --text-main: #24352b;
+  --text-muted: #5f7466;
+  --text-light: #899c90;
+  
+  --color-danger-soft: #faebea;
+  --color-danger-text: #b5473f;
+  --color-danger-border: #f2cecc;
+  
+  --color-warning-soft: #fbf4e6;
+  --color-warning-text: #9e6b20;
+  
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 9999px;
+  
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background: var(--bg-gradient);
+  min-height: 100vh;
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Thanh cuộn tinh tế, nhẹ nhàng */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #edf3ee;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c2d3c6;
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a3bca9;
+}

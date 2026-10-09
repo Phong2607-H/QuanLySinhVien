@@ -1,0 +1,150 @@
+<div class="container">
+  <div class="user-header">
+    <span>Xin chào, <strong>{{ getUserName() }}</strong> 🌿</span>
+    <div class="user-header-actions">
+      <button *ngIf="authService.hasRole('Admin')" routerLink="/lich-su" class="btn-history">
+        📜 Lịch sử hệ thống
+      </button>
+      <button class="btn-logout" (click)="dangXuat()">Đăng xuất</button>
+    </div>
+  </div>
+
+  <h1>QUẢN LÝ SINH VIÊN</h1>
+
+  <!-- BANNER THÔNG BÁO LỖI -->
+  <div *ngIf="errorMessage" class="error-banner">
+    <span>⚠️ {{ errorMessage }}</span>
+    <button class="btn-retry" (click)="taiDanhSach()">Thử lại</button>
+  </div>
+
+  <!-- TÌM KIẾM -->
+  <div class="search-box">
+    <input type="text" [(ngModel)]="tuKhoaTimKiem" placeholder="Tìm kiếm theo họ tên hoặc email...">
+    <button (click)="timKiem()">Tìm kiếm</button>
+  </div>
+
+  <!-- FORM THÊM / SỬA -->
+  <div class="form-box" *ngIf="authService.hasRole('Admin')">
+    <h3>
+      {{ dangSuaId !== null ? '✏️ CẬP NHẬT THÔNG TIN SINH VIÊN' : '🌱 THÊM SINH VIÊN MỚI' }}
+    </h3>
+
+    <!-- KHUNG XEM TRƯỚC ẢNH ĐẠI DIỆN TRONG FORM -->
+    <div *ngIf="previewAvatarUrl || (dangSuaId !== null && sinhVien.avatarUrl)" 
+         style="margin-bottom: 16px; display: flex; align-items: center; gap: 14px; background: #f6faf7; padding: 10px 14px; border-radius: var(--radius-md); border: 1px dashed var(--color-sage-border);">
+      <img [src]="previewAvatarUrl || ('https://localhost:7280' + sinhVien.avatarUrl)" 
+           alt="Ảnh đại diện xem trước" 
+           style="width: 58px; height: 58px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-sage); box-shadow: 0 2px 8px rgba(69, 111, 87, 0.15);">
+      <div>
+        <div style="font-size: 13px; font-weight: 600; color: var(--color-sage-hover);">
+          {{ previewAvatarUrl ? '✓ Ảnh vừa chọn (Xem trước)' : 'Ảnh hiện tại trên hệ thống' }}
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted);" *ngIf="formSelectedFile">
+          Tệp: {{ formSelectedFile.name }}
+        </div>
+      </div>
+    </div>
+
+    <label>Ảnh đại diện (Tải lên)</label>
+    <input id="formFileInput" #fileInputForm type="file" (change)="chonFileChoForm($event)" accept="image/png, image/jpeg, image/jpg" style="margin-bottom: 12px; display: block; width: 100%;">
+
+    <!-- Thanh tiến trình tải ảnh cho FORM -->
+    <div *ngIf="dangUploadForm" class="progress-container" style="margin-bottom: 15px; width: 100%;">
+      <div class="progress-bar" [style.width.%]="tienTrinhUpload"></div>
+      <span class="progress-text">Đang tải: {{ tienTrinhUpload }}%</span>
+    </div>
+
+    <label>Họ tên</label>
+    <input type="text"
+           [(ngModel)]="sinhVien.hoTen"
+           placeholder="Nhập họ và tên đầy đủ">
+
+    <label>Email</label>
+    <input type="email"
+           [(ngModel)]="sinhVien.email"
+           placeholder="Nhập địa chỉ email hợp lệ">
+
+    <label>Tuổi</label>
+    <input type="number"
+           [(ngModel)]="sinhVien.tuoi"
+           min="1"
+           max="150"
+           placeholder="Nhập tuổi (từ 1 đến 150)">
+
+    <div class="button-group">
+      <button (click)="luu()">
+        {{ dangSuaId !== null ? 'Cập nhật' : 'Thêm mới' }}
+      </button>
+
+      <button *ngIf="dangSuaId !== null"
+              (click)="lamMoiForm()">
+        Hủy bỏ
+      </button>
+    </div>
+  </div>
+
+  <!-- DANH SÁCH -->
+  <h2>Danh sách sinh viên</h2>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th (click)="thayDoiSapXep('Id')" title="Bấm để sắp xếp">STT ↕</th>
+          <th>Ảnh đại diện</th>
+          <th (click)="thayDoiSapXep('HoTen')" title="Bấm để sắp xếp">Họ tên ↕</th>
+          <th (click)="thayDoiSapXep('Email')" title="Bấm để sắp xếp">Email ↕</th>
+          <th (click)="thayDoiSapXep('Tuoi')" title="Bấm để sắp xếp">Tuổi ↕</th>
+          <th *ngIf="authService.hasRole('Admin')">Thao tác</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <!-- CÓ SINH VIÊN -->
+        <tr *ngFor="let sv of danhSachSinhVien; let i = index">
+          <td>{{ (trangHienTai - 1) * soDongMoiTrang + i + 1 }}</td>
+          <td>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+              <img [src]="sv.avatarUrl ? 'https://localhost:7280' + sv.avatarUrl : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'" 
+                   alt="Avatar" 
+                   class="avatar-img">
+              <div *ngIf="authService.hasRole('Admin') || authService.hasRole('GiangVien')" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <label [attr.for]="'file-upload-' + sv.id" class="btn-upload-avatar">
+                  📷 Đổi ảnh
+                </label>
+                <input [id]="'file-upload-' + sv.id" type="file" accept="image/png, image/jpeg" (change)="taiLenAvatarTuDong(sv.id, $event)" style="display: none;">
+
+                <div *ngIf="dangUploadStudentId === sv.id" class="progress-container">
+                  <div class="progress-bar" [style.width.%]="tienTrinhUpload"></div>
+                  <span class="progress-text">{{ tienTrinhUpload }}%</span>
+                </div>
+              </div>
+            </div>
+          </td>
+
+          <td style="font-weight: 500;">{{ sv.hoTen }}</td>
+          <td style="color: var(--text-muted);">{{ sv.email }}</td>
+          <td>{{ sv.tuoi }}</td>
+
+          <td *ngIf="authService.hasRole('Admin')">
+            <button class="btn-sua" (click)="sua(sv)">Sửa</button>
+            <button class="btn-xoa" (click)="xoa(sv.id)">Xóa</button>
+          </td>
+        </tr>
+
+        <!-- KHÔNG CÓ SINH VIÊN -->
+        <tr *ngIf="danhSachSinhVien.length === 0">
+          <td colspan="6" style="text-align: center; padding: 32px; color: var(--text-light);">
+            Chưa có sinh viên nào trong danh sách
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <button [disabled]="trangHienTai === 1" (click)="chuyenTrang(trangHienTai - 1)">← Trang trước</button>
+    <span>Trang <strong>{{ trangHienTai }}</strong> / {{ tongSoTrang }} (Tổng cộng {{ tongSoDong }} sinh viên)</span>
+    <button [disabled]="trangHienTai >= tongSoTrang" (click)="chuyenTrang(trangHienTai + 1)">Trang sau →</button>
+  </div>
+</div>

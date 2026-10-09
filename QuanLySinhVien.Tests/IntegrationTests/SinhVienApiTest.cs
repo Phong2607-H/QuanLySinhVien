@@ -128,4 +128,33 @@ public class SinhVienApiTests : IClassFixture<ApiFactory>
         var err = await res.Content.ReadFromJsonAsync<ErrorResponse>();
         Assert.Equal("Tuổi phải là số dương từ 18 đến 99!", err!.Message);
     }
+    // 6. Hai người cùng sửa → người lưu sau bị 409, dữ liệu của người trước được giữ
+    [Fact]
+    public async Task HaiNguoiCungSua_NguoiSauBi409()
+    {
+        // ARRANGE: tạo 1 sinh viên
+        var admin = await TaoClientAsync("Admin");
+        var created = (await (await admin.PostAsJsonAsync("/api/SinhVien", SinhVienMoi()))
+            .Content.ReadFromJsonAsync<SinhVienDto>())!;
+
+        // A và B cùng mở form → cầm CÙNG một RowVersion
+        var formA = (await admin.GetFromJsonAsync<SinhVienDto>($"/api/SinhVien/{created.Id}"))!;
+        var formB = (await admin.GetFromJsonAsync<SinhVienDto>($"/api/SinhVien/{created.Id}"))!;
+        Assert.Equal(formA.RowVersion, formB.RowVersion);
+
+        // ACT 1: A lưu trước → thành công
+        formA.HoTen = "A đã sửa";
+        var resA = await admin.PutAsJsonAsync($"/api/SinhVien/{created.Id}", formA);
+        Assert.Equal(HttpStatusCode.NoContent, resA.StatusCode);
+
+        // ACT 2: B lưu sau với RowVersion cũ → bị chặn
+        formB.HoTen = "B đã sửa";
+        var resB = await admin.PutAsJsonAsync($"/api/SinhVien/{created.Id}", formB);
+        Assert.Equal(HttpStatusCode.Conflict, resB.StatusCode);
+
+        // ASSERT: dữ liệu trong DB là của A, không bị B ghi đè
+        var final = (await admin.GetFromJsonAsync<SinhVienDto>($"/api/SinhVien/{created.Id}"))!;
+        Assert.Equal("A đã sửa", final.HoTen);
+        Assert.NotEqual(formA.RowVersion, final.RowVersion); // SQL đã tự đổi RowVersion
+    }
 }
